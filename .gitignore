@@ -8,7 +8,7 @@
 # conda cache
 .pytest_cache/
 
-#Microsoft temp files
+# Microsoft temp files
 ~$*
 
 # Nextflow logs and caches
@@ -18,6 +18,10 @@
 *.run
 *dag.pdf.*
 notes.txt
+
+# Python virtual envs
+venv/
+.venv/
 
 # Pipeline specific files
 resources/
