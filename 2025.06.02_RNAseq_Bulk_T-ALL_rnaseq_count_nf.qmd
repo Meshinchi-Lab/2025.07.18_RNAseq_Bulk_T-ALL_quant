@@ -1,0 +1,81 @@
+---
+title: ""
+author: ""
+jupyter: python3
+execute: 
+  enabled: true
+  cache: true
+  freeze: auto
+format:
+  html:
+    quarto-required: ">=1.6.40"
+    theme: cyborg
+    toc: true
+    toc-depth: 3
+    toc-location: left-body
+    code-fold: false
+    code-overflow: wrap
+    code-line-numbers: false
+    code-link: true
+    code-copy: true
+    anchor-sections: true
+    fontsize: 1.1em
+    linestretch: 1.5
+    smooth-scroll: true
+    email-obfuscation: javascript
+---
+
+# Set-up 
+
+```{python}
+# Core plotting libraries
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Core scverse libraries
+# import scanpy as sc
+# import anndata as ad
+
+# Session information
+import session_info
+```
+
+# Background
+
+please see attached list of the samples we sequenced with the following info:
+  - [...]
+
+
+### Collaborators
+
+- [NAME 1]
+- [NAME 2]
+- [...]
+
+- Department of Pediatric Hematology-Oncology, and Cell and Gene Therapies
+
+- Bambino Gesù Children's Hospital
+
+# Clinical Data
+
+
+# Sample Metadata
+
+
+# Quality Control 
+
+
+# Unsupervised Clustering
+
+
+# Perform Differential Expression
+
+
+# QC Plots 
+
+
+# Session Information
+
+```{python}
+session_info.show()
+```

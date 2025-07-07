@@ -20,7 +20,7 @@ work/
 *dag.pdf.*
 notes.txt
 
-# Python virtual envs
+# Python Environments
 venv/
 .venv/
 
