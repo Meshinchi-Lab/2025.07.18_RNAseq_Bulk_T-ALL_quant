@@ -52,6 +52,22 @@ please see attached list of the samples we sequenced with the following info:
 
 - Bambino Gesù Children's Hospital
 
+# Install Dependencies
+
+Use the lab quarto template 
+```{bash}
+quarto use template Meshinchi-Lab/py_analysis_template
+python3 -m venv venv 
+source venv/bin/activate 
+python3 -m pip install -r requirements.txt
+```
+
+Install nextflow and NF-Core tools CLI 
+```{bash}
+python3 -m pip install nextflow
+python3 -m pip install nf-core
+```
+
 # Download Reference Data
 
 ```{bash}
@@ -64,6 +80,20 @@ rclone lsd --http-url https://ftp.ebi.ac.uk :http:/pub/databases/gencode/Gencode
 
 cd $REFS
 sudo rclone copy --http-url https://ftp.ebi.ac.uk :http:/pub/databases/gencode/Gencode_human/release_48/GRCh38.primary_assembly.genome.fa.gz . -P
+```
+
+# Download Test Datasets
+
+Human data from the NF-Core github repo 
+
+```{bash}
+# https://github.com/nf-core/test-datasets/tree/rnafusion/testdata/human
+
+sudo wget -v https://raw.githubusercontent.com/nf-core/test-datasets/refs/heads/rnafusion/testdata/human/README.md
+
+sudo wget -v https://github.com/nf-core/test-datasets/raw/refs/heads/rnafusion/testdata/human/reads_1.fq.gz
+
+sudo wget -v https://github.com/nf-core/test-datasets/raw/refs/heads/rnafusion/testdata/human/reads_2.fq.gz
 ```
 
 # Sample Metadata
