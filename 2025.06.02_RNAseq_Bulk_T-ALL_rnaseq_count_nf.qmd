@@ -96,6 +96,13 @@ sudo wget -v https://github.com/nf-core/test-datasets/raw/refs/heads/rnafusion/t
 sudo wget -v https://github.com/nf-core/test-datasets/raw/refs/heads/rnafusion/testdata/human/reads_2.fq.gz
 ```
 
+# Run Test Data
+
+OUTDIR="$HOME/github_repos/2025.06.02_RNAseq_Bulk_T-ALL/data/rnaseq"
+```{bash}
+
+```
+
 # Sample Metadata
 
 
