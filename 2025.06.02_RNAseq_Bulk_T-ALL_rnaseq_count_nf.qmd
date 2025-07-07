@@ -32,10 +32,6 @@ format:
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Core scverse libraries
-# import scanpy as sc
-# import anndata as ad
-
 # Session information
 import session_info
 ```
@@ -56,8 +52,19 @@ please see attached list of the samples we sequenced with the following info:
 
 - Bambino Gesù Children's Hospital
 
-# Clinical Data
+# Download Reference Data
 
+```{bash}
+# URL='https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_48/GRCh38.primary_assembly.genome.fa.gz'
+
+REFS="/genome_references/human/gencode_v48/"
+sudo mkdir -p $REFS
+
+rclone lsd --http-url https://ftp.ebi.ac.uk :http:/pub/databases/gencode/Gencode_human/release_48
+
+cd $REFS
+sudo rclone copy --http-url https://ftp.ebi.ac.uk :http:/pub/databases/gencode/Gencode_human/release_48/GRCh38.primary_assembly.genome.fa.gz . -P
+```
 
 # Sample Metadata
 
