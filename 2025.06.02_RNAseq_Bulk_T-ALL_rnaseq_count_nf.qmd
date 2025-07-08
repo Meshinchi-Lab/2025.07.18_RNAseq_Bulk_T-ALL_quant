@@ -117,17 +117,30 @@ sudo apt-get install qemu-system
 sudo dpkg --log=containerd.log --debug=10 -i containerd.io_1.7.27-1_amd64.deb
 sudo dpkg --log=docker-ce-cli.log --debug=10 -i docker-ce-cli_28.3.1-1~ubuntu.22.04~jammy_amd64.deb
 sudo dpkg --log=docker-ce-cli.log --debug=10 -i docker-ce_28.3.1-1~ubuntu.22.04~jammy_amd64.deb
-
 ```
 
-OUTDIR="$HOME/github_repos/2025.06.02_RNAseq_Bulk_T-ALL/data/rnaseq"
+Configure the `docker` user group
+
+```{bash}
+#https://docs.docker.com/engine/install/linux-postinstall/
+sudo groupadd docker
+sudo usermod -aG docker $USER
+newgrp docker
+docker run hello-world
+```
 
 ```{bash}
 # activate venv
 source venv/bin/activate
 
 ```
+
 # Sample Metadata
+
+
+# Run with T-ALL Samples 
+
+OUTDIR="$HOME/github_repos/2025.06.02_RNAseq_Bulk_T-ALL/data/rnaseq"
 
 
 # Quality Control 
