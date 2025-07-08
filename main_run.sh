@@ -6,7 +6,7 @@ NFX_CONFIG=./nextflow.config
 # Options: 
 NFX_PROFILE='local_docker'
 # Options:  rnaseq_count, prep_genome, or sra_download
-NFX_ENTRY='rnaseq_count'
+NFX_ENTRY='prep_genome'
 # The output prefix on filenames for reports/logs
 REPORT=${1:-"pipeline_report"}
 
