@@ -1,6 +1,6 @@
 ---
-title: ""
-author: ""
+title: "T-ALL Bulk RNA-seq STAR Quantification"
+author: "Jenny L. Smith"
 jupyter: python3
 execute: 
   enabled: true
@@ -135,7 +135,13 @@ source venv/bin/activate
 
 ```
 
+getent group docker
+id -u
+id -g
+id -G
+
 # Sample Metadata
+
 
 
 # Run with T-ALL Samples 
