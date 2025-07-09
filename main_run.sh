@@ -2,28 +2,24 @@
 
 set -eu
 DATE=$(date +%F)
-NFX_CONFIG=./nextflow.config
+NXF_CONFIG=./nextflow.config
 # Options: 
-NFX_PROFILE='local_docker'
+NXF_PROFILE='local_docker'
 # Options:  rnaseq_count, prep_genome, or sra_download
-NFX_ENTRY='prep_genome'
+NXF_ENTRY='rnaseq_count'
 # The output prefix on filenames for reports/logs
-REPORT=${1:-"pipeline_report"}
+REPORT=${1:-"rnaseq_star_counts"}
 
-# Load the modules
-# # TO DO: make the module version a variable that the user can change eg SINGULARITY="singularity/3.9.9"; module load $SINGULARITY
-# if [[ $NFX_PROFILE =~ "singularity" ]]
-# then
-#     module load singularity
-# fi
+# Set Debug > 0 to increase verbosity in nextflow logs
+export NXF_DEBUG=2
 
 # Nextflow run to execute the workflow
 PREFIX="${REPORT}_${DATE}"
-nextflow -c ${NFX_CONFIG} \
+nextflow -c ${NXF_CONFIG} \
     -log reports/${PREFIX}_nextflow.log \
     run main.nf \
-    -entry ${NFX_ENTRY} \
-    -profile ${NFX_PROFILE} \
+    -entry ${NXF_ENTRY} \
+    -profile ${NXF_PROFILE} \
     -with-report reports/${PREFIX}.html \
     -with-dag dag/${PREFIX}_dag.pdf \
     -cache TRUE \
