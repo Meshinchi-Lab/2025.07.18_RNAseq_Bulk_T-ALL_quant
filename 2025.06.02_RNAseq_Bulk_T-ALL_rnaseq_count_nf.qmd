@@ -36,6 +36,10 @@ import matplotlib.pyplot as plt
 import session_info
 ```
 
+```{r}
+library(dplyr)
+```
+
 # Background
 
 please see attached list of the samples we sequenced with the following info:
@@ -140,14 +144,44 @@ id -u
 id -g
 id -G
 
+
+# Run T-ALL Samples 
+
+SOURCE="$HOME/mnt/opbg/ngsonco/NGS/Francesca Benini/T-ALL/WTS run 2025.05.12/WTS_1-51-38360350"
+TARGET="$HOME/github_repos/2025.06.02_RNAseq_Bulk_T-ALL/data/fastq/WTS_run_2025.05.12"
+OUTDIR="$HOME/github_repos/2025.06.02_RNAseq_Bulk_T-ALL/data/rnaseq_quant"
+
+```{bash}
+
+SOURCE="$HOME/mnt/opbg/ngsonco/NGS/Francesca Benini/T-ALL/WTS run 2025.05.12/WTS_1-51-38360350"
+TARGET="$HOME/github_repos/2025.06.02_RNAseq_Bulk_T-ALL/data/fastq/WTS_run_2025.05.12"
+
+# symlink the fastqs from the 
+ln -s "$SOURCE" $TARGET
+
+```
+
+```{bash}
+OUTDIR="$HOME/github_repos/2025.06.02_RNAseq_Bulk_T-ALL/data/rnaseq_quant"
+mkdir $OUTDIR
+```
+
 # Sample Metadata
 
+```{r}
+sample_info <- read.csv(file.path(sys.getenv("HOME"),"data/metadata/2025.06.03_T-ALL_samples_forJenny_rnaseq_libraries_cleaned.csv"))
+```
 
+```{r}
+DESCRIPTION <- c("column r1 : the absolute or relative filepath for the read 1 fastq in paired-end RNA-seq, or the single-end fastq file.
+column r2 : the absolute or relative filepath for the read 2 fastq in paired-end RNA-seq.
+column id : unique sample ID, no duplicates allowed in the sample sheet.
+column single_end : boolean [true/false] if the data is single-end or paired-end.")
+```
 
-# Run with T-ALL Samples 
+```{r}
 
-OUTDIR="$HOME/github_repos/2025.06.02_RNAseq_Bulk_T-ALL/data/rnaseq"
-
+```
 
 # Quality Control 
 
