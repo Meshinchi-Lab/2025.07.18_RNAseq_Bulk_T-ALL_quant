@@ -103,6 +103,7 @@ sudo wget -v https://github.com/nf-core/test-datasets/raw/refs/heads/rnafusion/t
 # Run Test Data
 
 ### Set-up environment 
+
 ```{bash}
 # colima
 cd ~/opt
@@ -136,7 +137,7 @@ docker run hello-world
 ```{bash}
 # activate venv
 source venv/bin/activate
-
+./main_run test_pe_dataset
 ```
 
 getent group docker
@@ -152,7 +153,6 @@ TARGET="$HOME/github_repos/2025.06.02_RNAseq_Bulk_T-ALL/data/fastq/WTS_run_2025.
 OUTDIR="$HOME/github_repos/2025.06.02_RNAseq_Bulk_T-ALL/data/rnaseq_quant"
 
 ```{bash}
-
 SOURCE="$HOME/mnt/opbg/ngsonco/NGS/Francesca Benini/T-ALL/WTS run 2025.05.12/WTS_1-51-38360350"
 TARGET="$HOME/github_repos/2025.06.02_RNAseq_Bulk_T-ALL/data/fastq/WTS_run_2025.05.12"
 
@@ -169,19 +169,44 @@ mkdir $OUTDIR
 # Sample Metadata
 
 ```{r}
-sample_info <- read.csv(file.path(sys.getenv("HOME"),"data/metadata/2025.06.03_T-ALL_samples_forJenny_rnaseq_libraries_cleaned.csv"))
+library(dplyr)
+
+sample_info <- read.table(file.path(Sys.getenv("HOME"),"github_repos/2025.06.02_RNAseq_Bulk_T-ALL/data/metadata/2025.06.03_T-ALL_samples_forJenny_rnaseq_libraries_cleaned.tsv"),
+                          sep = "\t",
+                          header = TRUE)
+
+
+head(sample_info)
 ```
 
 ```{r}
-DESCRIPTION <- c("column r1 : the absolute or relative filepath for the read 1 fastq in paired-end RNA-seq, or the single-end fastq file.
+DESCRIPTION_HEADER <- c("column r1 : the absolute or relative filepath for the read 1 fastq in paired-end RNA-seq, or the single-end fastq file.
 column r2 : the absolute or relative filepath for the read 2 fastq in paired-end RNA-seq.
 column id : unique sample ID, no duplicates allowed in the sample sheet.
 column single_end : boolean [true/false] if the data is single-end or paired-end.")
 ```
 
 ```{r}
-
+cat(DESCRIPTION_HEADER, file = "data/sample_sheets/2025.06.03_T-ALL_bulk_rnaseq_sample_sheet.csv", sep = "\n")
 ```
+
+```{r}
+fqs_dir <- dir(file.path(Sys.getenv("HOME"), "github_repos/2025.06.02_RNAseq_Bulk_T-ALL/data/fastq/WTS_run_2025.05.12"), 
+               recursive = TRUE,
+               full.names = TRUE,
+               pattern = "*.fastq.gz")
+
+head(fqs_dir)
+```
+
+```{r}
+sample_sheet <- as_tibble(x = fqs_dir) %>% 
+    select(fq_path = value) %>% 
+    mutate()
+
+head(sample_sheet)
+```
+
 
 # Quality Control 
 
