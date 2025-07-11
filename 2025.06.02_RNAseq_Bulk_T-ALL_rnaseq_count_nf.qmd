@@ -180,16 +180,7 @@ sample_info <- read.table(file.path(Sys.getenv("HOME"),"github_repos/2025.06.02_
 head(sample_info)
 ```
 
-```{r}
-DESCRIPTION_HEADER <- c("column r1 : the absolute or relative filepath for the read 1 fastq in paired-end RNA-seq, or the single-end fastq file.
-column r2 : the absolute or relative filepath for the read 2 fastq in paired-end RNA-seq.
-column id : unique sample ID, no duplicates allowed in the sample sheet.
-column single_end : boolean [true/false] if the data is single-end or paired-end.")
-```
-
-```{r}
-cat(DESCRIPTION_HEADER, file = "data/sample_sheets/2025.06.03_T-ALL_bulk_rnaseq_sample_sheet.csv", sep = "\n")
-```
+## Concatenate Fastq Files 
 
 ```{r}
 # fqs_dir <- dir(file.path(Sys.getenv("HOME"), "github_repos/2025.06.02_RNAseq_Bulk_T-ALL/data/fastq/WTS_run_2025.05.12"), 
@@ -237,16 +228,51 @@ fqs_concat <- fqs_concat %>%
            everything()) %>% 
     arrange(desc(sample_id), read, lane) %>% 
     group_by(sample_id, sample_name, read) %>%
-    mutate(cat_command = glue::glue("zcat {paste(fastq_path, collapse = ' ')} > {OUTDIR}/{sample_id}_{read}_001.fastq") %>%
+    mutate(cat_command = glue::glue("zcat {paste(fastq_path, collapse = ' ')} > {OUTDIR}/{sample_id}_{read}_001.fastq &") %>%
                unique() %>% 
                c(.,"")) %>%
     ungroup()
 
 head(fqs_concat)
+# dim(fqs_concat) #204  12
+# length(unique(fqs_concat$sample_name)) #51
+
+write.table(fqs_concat, 
+            file = "data/2025.06.02_RNAseq_Bulk_T-ALL_fastq_manifest.tsv",
+            sep = "\t")
 ```
 
 ```{r}
-cmds <- fqs_concat[["cat_command"]]
+cmds <- fqs_concat[["cat_command"]] %>% 
+    grep("^$", ., invert = TRUE, value = TRUE) %>% 
+    paste(., collapse = "\n") %>% 
+    glue::glue("#!/bin/bash\n\n",
+           "{cmds}\n",
+           "wait\n",
+           cmds = .)
+
+# head(cmds)
+length(cmds) #1
+str_count(string = cmds, pattern = "&") # 102
+cat(cmds, file = file.path(OUTDIR,"concat_fqs.sh"))
+```
+
+```{bash, eval=FALSE}
+bash "$HOME/github_repos/2025.06.02_RNAseq_Bulk_T-ALL/data/fastq/concatenated/concat_fqs.sh"
+```
+
+
+## Sample Sheet 
+
+```{r}
+DESCRIPTION_HEADER <- c("column r1 : the absolute or relative filepath for the read 1 fastq in paired-end RNA-seq, or the single-end fastq file.
+column r2 : the absolute or relative filepath for the read 2 fastq in paired-end RNA-seq.
+column id : unique sample ID, no duplicates allowed in the sample sheet.
+column single_end : boolean [true/false] if the data is single-end or paired-end.")
+```
+
+```{r}
+cat(DESCRIPTION_HEADER, file = "data/sample_sheets/2025.06.03_T-ALL_bulk_rnaseq_sample_sheet.csv", sep = "\n")
 ```
 
 ```{r}
