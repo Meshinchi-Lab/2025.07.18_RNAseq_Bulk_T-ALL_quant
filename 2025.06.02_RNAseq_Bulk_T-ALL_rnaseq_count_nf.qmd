@@ -37,6 +37,7 @@ import session_info
 ```
 
 ```{r}
+library(biomaRt)
 library(dplyr)
 library(stringr)
 library(purrr)
@@ -75,7 +76,7 @@ python3 -m pip install nextflow
 python3 -m pip install nf-core
 ```
 
-# Download Reference Data
+# Download and Prepare Reference Data
 
 ```{bash}
 # URL='https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_48/GRCh38.primary_assembly.genome.fa.gz'
@@ -87,6 +88,80 @@ rclone lsd --http-url https://ftp.ebi.ac.uk :http:/pub/databases/gencode/Gencode
 
 cd $REFS
 sudo rclone copy --http-url https://ftp.ebi.ac.uk :http:/pub/databases/gencode/Gencode_human/release_48/GRCh38.primary_assembly.genome.fa.gz . -P
+```
+
+```{r}
+species <- "Homo_sapiens"
+# https://www.gencodegenes.org/human/releases.html
+# gencode v48 corresponds to ensembl v114
+mart <- useEnsembl('ensembl', 
+                   dataset = 'hsapiens_gene_ensembl', 
+                   version = 114)
+# list attributes 
+mart_attr <- listAttributes(mart)
+mart_filt <- listFilters(mart, what = c("name",
+                                        "description",
+                                        "fullDescription",
+                                        "options"))
+
+head(mart_attr)
+head(mart_filt)
+
+# Biotypes available 
+
+# artifact,IG_C_gene,IG_C_pseudogene,IG_D_gene,IG_J_gene,IG_J_pseudogene,IG_pseudogene,IG_V_gene,IG_V_pseudogene,lncRNA,miRNA,misc_RNA,Mt_rRNA,Mt_tRNA,nonsense_mediated_decay,non_stop_decay,processed_pseudogene,processed_transcript,protein_coding,protein_coding_CDS_not_defined,protein_coding_LoF,pseudogene,retained_intron,ribozyme,rRNA,rRNA_pseudogene,scaRNA,snoRNA,snRNA,sRNA,TEC,transcribed_processed_pseudogene,transcribed_unitary_pseudogene,transcribed_unprocessed_pseudogene,translated_processed_pseudogene,TR_C_gene,TR_D_gene,TR_J_gene,TR_J_pseudogene,TR_V_gene,TR_V_pseudogene,unitary_pseudogene,unprocessed_pseudogene,vault_RNA
+```
+
+```{r}
+rRNAs <- biomaRt::getBM(values=c("rRNA", "rRNA_pseudogene","Mt_rRNA","ribozyme"),
+               filters="biotype", 
+               attributes=c("chromosome_name","exon_chrom_start",
+                            "exon_chrom_end","strand","ensembl_transcript_id",
+                            "ensembl_exon_id","external_gene_name",
+                            "gene_biotype","description"), 
+               mart = mart)
+
+head(rRNAs)
+# table(rRNAs$strand)
+dim(rRNAs) #589   
+
+rRNAs_df <- rRNAs %>% 
+  mutate(strand = ifelse(strand == 1, "+", "-"),
+         start = exon_chrom_start,
+         end = exon_chrom_end,
+         score = 0,
+         itemRgb = 0,
+         blockCount = 1,
+         blockSizes = exon_chrom_end - exon_chrom_start,
+         blockStarts = 0) %>% 
+  select(chromosome_name:exon_chrom_end,
+         ensembl_exon_id,
+         score, 
+         strand,
+         start,
+         end,
+         itemRgb,
+         blockCount,
+         blockSizes,
+         blockStarts)
+
+head(rRNAs_df)
+dim(rRNAs_df)
+# View(rRNAs)
+```
+
+```{r}
+dir.create("data/references/human/", recursive = TRUE)
+write.table(select(rRNAs, ensembl_transcript_id),
+            file = "data/references/human/ensembl_transcript_id_v114.txt",
+            sep = "\t", 
+            quote = FALSE, 
+            col.names = FALSE,
+            row.names = FALSE)
+```
+
+```{bash}
+sudo cp data/references/human/ensembl_transcript_id_v114.txt /genome_references/human/GRCh38/rRNA/ensembl_transcript_id_v114.txt
 ```
 
 # Download Test Datasets
