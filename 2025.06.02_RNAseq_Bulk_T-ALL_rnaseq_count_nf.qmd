@@ -151,20 +151,17 @@ id -G
 
 # Run T-ALL Samples 
 
-SOURCE="$HOME/mnt/opbg/ngsonco/NGS/Francesca Benini/T-ALL/WTS run 2025.05.12/WTS_1-51-38360350"
-TARGET="$HOME/github_repos/2025.06.02_RNAseq_Bulk_T-ALL/data/fastq/WTS_run_2025.05.12"
-OUTDIR="$HOME/github_repos/2025.06.02_RNAseq_Bulk_T-ALL/data/rnaseq_quant"
-
 ```{bash}
 SOURCE="$HOME/mnt/opbg/ngsonco/NGS/Francesca Benini/T-ALL/WTS run 2025.05.12/WTS_1-51-38360350"
 TARGET="$HOME/github_repos/2025.06.02_RNAseq_Bulk_T-ALL/data/fastq/WTS_run_2025.05.12"
 
-# symlink the fastqs from the 
+# symlink the fastqs from the network drive to the bioinformatics PC
 ln -s "$SOURCE" $TARGET
 
 ```
 
 ```{bash}
+# create an output directory for the rna-seq counts 
 OUTDIR="$HOME/github_repos/2025.06.02_RNAseq_Bulk_T-ALL/data/rnaseq_quant"
 mkdir $OUTDIR
 ```
@@ -178,25 +175,35 @@ sample_info <- read.table(file.path(Sys.getenv("HOME"),"github_repos/2025.06.02_
 
 
 head(sample_info)
+dim(sample_info)
 ```
 
 ## Concatenate Fastq Files 
 
 ```{r}
-# fqs_dir <- dir(file.path(Sys.getenv("HOME"), "github_repos/2025.06.02_RNAseq_Bulk_T-ALL/data/fastq/WTS_run_2025.05.12"), 
-#                recursive = TRUE,
-#                full.names = TRUE,
-#                pattern = "*.fastq.gz")
+# list the fastq files for each sample/lane
+fqs_path <- file.path(Sys.getenv("HOME"), "github_repos/2025.06.02_RNAseq_Bulk_T-ALL/data/fastq/WTS_run_2025.05.12")
+
+if ( ! file.exists("fastq_filepaths.txt")){
+ fqs_dir <- dir(fqs_path, 
+               recursive = TRUE,
+               full.names = TRUE,
+               pattern = "*.fastq.gz") %>%
+               as.data.frame()
+  write.delim(fqs_dir, "fastq_filepaths.txt", sep="\t", col.names = FALSE, row.names = FALSE)
+}
 
 fqs_dir <- read.delim("fastq_filepaths.txt", header=FALSE)
 fqs_dir <- fqs_dir[["V1"]]
 head(fqs_dir)
+length(fqs_dir) #204
 ```
 
 ```{r}
-# define outdir
-OUTDIR <- file.path(Sys.getenv("HOME"), "github_repos/2025.06.02_RNAseq_Bulk_T-ALL/data/fastq/concatenated")
-dir.create(OUTDIR, recursive = TRUE)
+# define outdirs
+OUTDIR="/mnt/bioinformatics/nextflow_out/2025.06.02_RNAseq_Bulk_T-ALL/fastq"
+PROJ_DATA_DIR <- file.path(Sys.getenv("HOME"), "github_repos/2025.06.02_RNAseq_Bulk_T-ALL/data/fastq/concatenated")
+dir.create(PROJ_DATA_DIR, recursive = TRUE)
 
 # concatenate Lane 1 and Lane 2 for all samples
 fqs_concat<- map_dfr(.x = fqs_dir, .f = ~ t(str_split_1(.x, pattern = "/")) %>% 
@@ -205,7 +212,9 @@ fqs_concat<- map_dfr(.x = fqs_dir, .f = ~ t(str_split_1(.x, pattern = "/")) %>%
 
 fqs_concat <- fqs_concat %>% 
     rename_all(.funs = ~ unlist(fqs_concat[1,]))  %>% 
-    mutate(fastq_path = fqs_dir) %>% 
+    mutate(fastq_path = fqs_dir,
+           single_end = "false",
+           library_chemistry = "Illumina Stranded Total RNA Prep, Ligation with Ribo-Zero Plus") %>% 
     select(-c(home:github_repos, data),
             project = `2025.06.02_RNAseq_Bulk_T-ALL`,
             type = fastq,
@@ -218,8 +227,7 @@ fqs_concat <- fqs_concat %>%
            lane = str_split_fixed(lane, pattern = "[_-]", n = 3)[,2], 
            sample_name = str_split_fixed(fastq_file, pattern = "_", n = 2)[,1],
            read = str_split_fixed(fastq_file, pattern = "_", n = 5)[,4],
-           sample_id = gsub("^(.+)_L.+001.+$", "\\1", fastq_file)
-           ) %>% 
+           sample_id = gsub("^(.+)_L.+001.+$", "\\1", fastq_file)) %>% 
     select(sample_id, 
            sample_name, 
            lane, 
@@ -228,10 +236,13 @@ fqs_concat <- fqs_concat %>%
            everything()) %>% 
     arrange(desc(sample_id), read, lane) %>% 
     group_by(sample_id, sample_name, read) %>%
-    mutate(cat_command = glue::glue("zcat {paste(fastq_path, collapse = ' ')} > {OUTDIR}/{sample_id}_{read}_001.fastq &") %>%
+    mutate(concatenated_fastq = glue::glue("{OUTDIR}/{sample_id}_{read}_001.fastq"),
+           concatenated_fastq_path = glue::glue("{OUTDIR}/{sample_id}_{read}_001.fastq.gz")) %>%
+    mutate(cat_command = glue::glue("echo 'Processing {sample_id}_{read}'\nzcat {paste(fastq_path, collapse = ' ')} > {concatenated_fastq} && gzip -v {concatenated_fastq} & \n") %>%
                unique() %>% 
                c(.,"")) %>%
-    ungroup()
+    ungroup() %>%
+    select(-concatenated_fastq)
 
 head(fqs_concat)
 # dim(fqs_concat) #204  12
@@ -242,47 +253,123 @@ write.table(fqs_concat,
             sep = "\t")
 ```
 
+```{bash}
+# Use the partition in /mnt with ~4tb of disk space
+OUTDIR="/mnt/bioinformatics/nextflow_out/2025.06.02_RNAseq_Bulk_T-ALL/fastq"
+# make a symlink to the data analysis directory
+PROJ_DATA_DIR="$HOME/github_repos/2025.06.02_RNAseq_Bulk_T-ALL/data/fastq/concatenated"
+
+ln -s $OUTDIR $PROJ_DATA_DIR
+```
+
 ```{r}
+PROJ_DATA_DIR <- file.path(Sys.getenv("HOME"), "github_repos/2025.06.02_RNAseq_Bulk_T-ALL/data/fastq/concatenated")
+
+# create a single shell script to concatenate Lane 1 and Lane 2 fastqs for each sample
 cmds <- fqs_concat[["cat_command"]] %>% 
-    grep("^$", ., invert = TRUE, value = TRUE) %>% 
+    grep("^$", ., invert = TRUE, value = TRUE)
+
+length(cmds) #102
+
+# split into two shell scripts to have a small initial sample size of N=3 to estimate necessary computational resources
+cmds_list <- map(1:2, .f = function(i, all_cmds = cmds){
+  if (i == 1){
+    index <- 1:6
+  }else{
+    index <- 7:length(all_cmds)
+  }
+  cmd_string <- all_cmds[index] %>%
     paste(., collapse = "\n") %>% 
     glue::glue("#!/bin/bash\n\n",
+          "# uncompress and concatentate fastq files from lane 1 and lane 2\n",
            "{cmds}\n",
-           "wait\n",
+           "wait\n\n",
            cmds = .)
+  
+  # write the shell scripts to a file in the analysis directory
+  outfile <- paste0("concat_fqs_v",i,".sh")
+  cat(cmd_string, file = file.path(dirname(PROJ_DATA_DIR),outfile))
+
+  # return the string
+  cmd_string
+})
 
 # head(cmds)
-length(cmds) #1
-str_count(string = cmds, pattern = "&") # 102
-cat(cmds, file = file.path(OUTDIR,"concat_fqs.sh"))
+str_count(string = cmds_list[[1]], pattern = "zcat") # 6
+str_count(string = cmds_list[[2]], pattern = "zcat") # 6
 ```
 
 ```{bash, eval=FALSE}
-bash "$HOME/github_repos/2025.06.02_RNAseq_Bulk_T-ALL/data/fastq/concatenated/concat_fqs.sh"
+# define variables
+FQS_DIR="$HOME/github_repos/2025.06.02_RNAseq_Bulk_T-ALL/data/fastq"
+SCRIPT="$FQS_DIR/concat_fqs_v1.sh"
+LOG="$FQS_DIR/concatenation_v1.log"
+
+# Run the concatenation script. save stdout and stderr to log file
+bash $SCRIPT >> $LOG 2>&1
 ```
 
 
 ## Sample Sheet 
 
 ```{r}
-DESCRIPTION_HEADER <- c("column r1 : the absolute or relative filepath for the read 1 fastq in paired-end RNA-seq, or the single-end fastq file.
-column r2 : the absolute or relative filepath for the read 2 fastq in paired-end RNA-seq.
-column id : unique sample ID, no duplicates allowed in the sample sheet.
-column single_end : boolean [true/false] if the data is single-end or paired-end.")
+DESCRIPTION_HEADER <- c("# column r1 : the absolute or relative filepath for the read 1 fastq in paired-end RNA-seq, or the single-end fastq file.
+# column r2 : the absolute or relative filepath for the read 2 fastq in paired-end RNA-seq.
+# column id : unique sample ID, no duplicates allowed in the sample sheet.
+# column single_end : boolean [true/false] if the data is single-end or paired-end.
+id,r1,r2,single_end")
 ```
 
 ```{r}
-cat(DESCRIPTION_HEADER, file = "data/sample_sheets/2025.06.03_T-ALL_bulk_rnaseq_sample_sheet.csv", sep = "\n")
-```
+SAMPLE_SHEET <- "data/sample_sheets/2025.06.03_T-ALL_bulk_rnaseq_sample_sheet_"
+V1 <- paste0(SAMPLE_SHEET, "v1.csv")
+V2 <- paste0(SAMPLE_SHEET,"v2.csv")
 
-```{r}
-sample_sheet <- as_tibble(x = fqs_dir) %>% 
-    select(fq_path = value) %>% 
-    mutate()
+cat(DESCRIPTION_HEADER, file = V1, sep = "\n")
+cat(DESCRIPTION_HEADER, file = V2, sep = "\n")
+
+sample_sheet <- fqs_concat %>% 
+  select(id = sample_id,
+          read,
+          single_end,
+          concatenated_fastq_path) %>% 
+  distinct() %>% 
+  pivot_wider(id_cols = c(id, single_end),
+              names_from = read,
+              values_from = concatenated_fastq_path) %>% 
+  janitor::clean_names()
+              
 
 head(sample_sheet)
+dim(sample_sheet)
+
+for (i in 1:2) {
+  outfile <- paste0("V",i)
+  if (i == 1){
+    index <- c(1:3)
+  }else{
+    index <- c(4:51)
+  }
+
+  sample_sheet[index,] %>% 
+    glue::glue_data("{id},{r1},{r2},{single_end}")  %>% 
+    cat(.,  file = get(outfile), sep = "\n", append = TRUE)
+
+}
 ```
 
+```{bash}
+NXF_OUTDIR="/mnt/bioinformatics/nextflow_out/2025.06.02_RNAseq_Bulk_T-ALL/rnaseq_quant"
+PROJ_OUTDIR="$HOME/github_repos/2025.06.02_RNAseq_Bulk_T-ALL/data/rnaseq_quant"
+
+ln -s $NXF_OUTDIR $PROJ_OUTDIR
+```
+
+```{bash}
+tmux 
+source venv/bin/activate
+./main_run.sh 2025.06.02_RNAseq_Bulk_T-ALL_V1
+```
 
 # Quality Control 
 
