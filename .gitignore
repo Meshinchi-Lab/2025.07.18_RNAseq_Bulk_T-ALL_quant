@@ -36,5 +36,5 @@ sample_sheet_val/
 notes.txt
 *patches
 notes/
-*data/
-fastq_filepaths.txt
+**data/
+*filepaths.txt
