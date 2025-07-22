@@ -6,10 +6,11 @@ include { sra_fastqs } from './subworkflows/local/sra_fastqs.nf'
 
 //QC modules
 include { FASTQC } from './modules/nf-core/fastqc/main.nf'
+include { FASTQC } from './modules/nf-core/fastqc/main.nf' as { FASTQC_TRIM }
 include { MULTIQC } from './modules/nf-core/multiqc/main.nf'
 include { RSEQC_SPLITBAM } from './modules/local/rseqc/splitbam.nf'
 include { RSEQC_READDISTRIBUTION } from './modules/nf-core/rseqc/readdistribution/main.nf'
-include { RSEQC_TIN } from './modules/nf-core/rseqc/tin/main.nf'
+// include { RSEQC_TIN } from './modules/nf-core/rseqc/tin/main.nf'
 
 // Alignment and quantification modules
 include { TRIMGALORE } from './modules/nf-core/trimgalore/main.nf'
@@ -76,6 +77,8 @@ workflow rnaseq_count {
             .set { trim_report }
         TRIMGALORE.out.reads
             .set { fastq_ch }
+        // FASTQC on the trimmed reads
+        FASTQC_TRIM(TRIMGALORE.out.reads)
     }else{
         Channel.empty()
             .set { trim_report }
@@ -106,7 +109,7 @@ workflow rnaseq_count {
         .set { rseqc_ch }
     RSEQC_SPLITBAM(rseqc_ch, genome_refs.out.rRNA_bed)
     RSEQC_READDISTRIBUTION(rseqc_ch, genome_refs.out.ref_gene_model)
-    RSEQC_TIN(rseqc_ch, genome_refs.out.ref_gene_model)
+    // RSEQC_TIN(rseqc_ch, genome_refs.out.ref_gene_model)
 
     //
     //
@@ -130,12 +133,12 @@ workflow rnaseq_count {
 
     FASTQC.out.fastqc
         .concat(trim_report)
-        // .concat(FASTQC_TRIM.out.fastqc)
+        .concat(FASTQC_TRIM.out.fastqc)
         .concat(STAR_ALIGN.out.log_final)
         .concat(STAR_ALIGN.out.read_counts)
         .concat(PICARD_MARKDUPLICATES.out.metrics)
         .concat(RSEQC_READDISTRIBUTION.out.txt)
-        .concat(RSEQC_TIN.out.txt)
+        // .concat(RSEQC_TIN.out.txt)
         .map { row -> row[1]}
         .collect()
         .set { multiqc_ch }

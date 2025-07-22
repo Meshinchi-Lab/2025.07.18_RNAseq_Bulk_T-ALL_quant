@@ -23,4 +23,5 @@ nextflow -c ${NXF_CONFIG} \
     -with-report reports/${PREFIX}.html \
     -with-dag dag/${PREFIX}_dag.pdf \
     -cache TRUE \
+    -with-trace \
     -resume
