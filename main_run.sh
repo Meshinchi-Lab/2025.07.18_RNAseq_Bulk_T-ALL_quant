@@ -11,7 +11,7 @@ NXF_ENTRY='rnaseq_count'
 REPORT=${1:-"rnaseq_star_counts"}
 
 # Set Debug > 0 to increase verbosity in nextflow logs
-export NXF_DEBUG=2
+export NXF_DEBUG=0
 
 # Nextflow run to execute the workflow
 PREFIX="${REPORT}_${DATE}"
@@ -23,5 +23,5 @@ nextflow -c ${NXF_CONFIG} \
     -with-report reports/${PREFIX}.html \
     -with-dag dag/${PREFIX}_dag.pdf \
     -cache TRUE \
-    -with-trace \
+    -with-trace reports/${PREFIX}_trace.txt \
     -resume

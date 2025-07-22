@@ -6,7 +6,7 @@ include { sra_fastqs } from './subworkflows/local/sra_fastqs.nf'
 
 //QC modules
 include { FASTQC } from './modules/nf-core/fastqc/main.nf'
-include { FASTQC } from './modules/nf-core/fastqc/main.nf' as { FASTQC_TRIM }
+include { FASTQC as FASTQC_TRIM } from './modules/nf-core/fastqc/main.nf'
 include { MULTIQC } from './modules/nf-core/multiqc/main.nf'
 include { RSEQC_SPLITBAM } from './modules/local/rseqc/splitbam.nf'
 include { RSEQC_READDISTRIBUTION } from './modules/nf-core/rseqc/readdistribution/main.nf'
