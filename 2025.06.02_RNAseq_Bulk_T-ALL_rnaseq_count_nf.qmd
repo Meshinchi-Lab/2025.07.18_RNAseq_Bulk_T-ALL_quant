@@ -444,18 +444,34 @@ ln -s $NXF_OUTDIR $PROJ_OUTDIR
 tmux 
 source venv/bin/activate
 ./main_run.sh 2025.06.02_RNAseq_Bulk_T-ALL_V1
+./main_run.sh 2025.06.02_RNAseq_Bulk_T-ALL_V2
 ```
 
-# Quality Control 
+# Computational Resources
 
+```{bash}
+cat reports/2025.06.02_RNAseq_Bulk_T-ALL_V2_2025-07-15.html | grep -E "window.data.+trace" -A 1 > reports/2025.06.02_RNAseq_Bulk_T-ALL_V2_2025-07-15.nextflow_trace.json
+```
 
-# Unsupervised Clustering
+```{r}
+library(jsonlite)
 
+resources <- fromJSON("reports/2025.06.02_RNAseq_Bulk_T-ALL_V2_2025-07-15.nextflow_trace.json")
+head(resources)
+```
 
-# Perform Differential Expression
+```{r}
+resources[resources$task_id == 101, ]
+```
 
+```{r}
+memory_gb <- R.utils::hsize(sum(as.numeric(resources[["memory"]]), na.rm = TRUE), units = "GB")
+memory_gb
 
-# QC Plots 
+cpus <- sum(as.numeric(resources[["cpus"]]), na.rm=TRUE)
+cpus
+```
+
 
 
 # Session Information
