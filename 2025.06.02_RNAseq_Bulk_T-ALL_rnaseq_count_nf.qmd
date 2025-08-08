@@ -196,9 +196,15 @@ tar -xvzf lima-1.1.1-Linux-x86_64.tar.gz
 # qemu 1
 sudo apt-get install qemu-system
 
+
 # configure the docker engine
-sudo dpkg --log=containerd.log --debug=10 -i containerd.io_1.7.27-1_amd64.deb
-sudo dpkg --log=docker-ce-cli.log --debug=10 -i docker-ce-cli_28.3.1-1~ubuntu.22.04~jammy_amd64.deb
+URL="https://download.docker.com/linux/ubuntu/dists/jammy/pool/stable/amd64"
+wget $URL/containerd.io_1.7.27-1_amd64.deb
+wget $URL/docker-ce-cli_28.3.1-1~ubuntu.22.04~jammy_amd64.deb
+wget $URL/docker-ce_28.3.1-1~ubuntu.22.04~jammy_amd64.deb
+
+sudo dpkg --log=containerd.log --debug=10 -i containerd.io_1.7.27-1_amd64.deb && \
+sudo dpkg --log=docker-ce-cli.log --debug=10 -i docker-ce-cli_28.3.1-1~ubuntu.22.04~jammy_amd64.deb && \
 sudo dpkg --log=docker-ce-cli.log --debug=10 -i docker-ce_28.3.1-1~ubuntu.22.04~jammy_amd64.deb
 ```
 
@@ -232,7 +238,6 @@ TARGET="$HOME/github_repos/2025.06.02_RNAseq_Bulk_T-ALL/data/fastq/WTS_run_2025.
 
 # symlink the fastqs from the network drive to the bioinformatics PC
 ln -s "$SOURCE" $TARGET
-
 ```
 
 ```{bash}
