@@ -6,7 +6,7 @@ include { sra_fastqs } from './subworkflows/local/sra_fastqs.nf'
 
 //QC modules
 include { FASTQC } from './modules/nf-core/fastqc/main.nf'
-include { FASTQC } from './modules/nf-core/fastqc/main.nf' as { FASTQC_TRIM }
+include { FASTQC as FASTQC_TRIM } from './modules/nf-core/fastqc/main.nf'
 include { MULTIQC } from './modules/nf-core/multiqc/main.nf'
 include { RSEQC_SPLITBAM } from './modules/local/rseqc/splitbam.nf'
 include { RSEQC_READDISTRIBUTION } from './modules/nf-core/rseqc/readdistribution/main.nf'
@@ -131,17 +131,24 @@ workflow rnaseq_count {
             .set { extra_multiqc_config }
     }
 
+    // Collect and concatentate all the output files to be parsed by multiQC
     FASTQC.out.fastqc
         .concat(trim_report)
-        .concat(FASTQC_TRIM.out.fastqc)
         .concat(STAR_ALIGN.out.log_final)
         .concat(STAR_ALIGN.out.read_counts)
         .concat(PICARD_MARKDUPLICATES.out.metrics)
         .concat(RSEQC_READDISTRIBUTION.out.txt)
-        // .concat(RSEQC_TIN.out.txt)
-        .map { row -> row[1]}
-        .collect()
-        .set { multiqc_ch }
+        .set { multiqc_concat }
+    
+    if ( params.trim ) {
+        multiqc_concat
+            .concat(FASTQC_TRIM.out.fastqc)
+    }
+    
+    multiqc_concat.map { row -> row[1]}
+                .collect()
+                .set { multiqc_ch }
+        
 
     //Using MultiQC for a single QC report
     MULTIQC(multiqc_ch, multiqc_config, extra_multiqc_config, sample_sheet.simpleName)
