@@ -2,10 +2,6 @@ report_comment: >
   For information about how to interpret these results, please see [ADD LINK HERE]
 data_format: "yaml"
 module_order:
-  - fastqc:
-          name: "FastQC (raw)"
-          info: "This section of the report shows FastQC results before adapter trimming for individual libraries."
-          path_filters: "fastqc_*/*.zip"
   - cutadapt:
           name: "Cutadapt (trimmed)"
           info: "This section of the report shows the length of trimmed reads by Cutadapt for individual libraries."
@@ -13,16 +9,12 @@ module_order:
           name: "FastQC (trimmed)"
           info: "This section of the report shows FastQC results after adapter trimming for individual libraries."
           path_filters: "fastqc_*.trimmed/*.zip"
-  - bowtie2:
-          name: "Bowtie2 Alignement (Target Genome)"
-          info: "This section of the report shows the alignment after adapter trimming for individual libraries."
-          path_filters_exclude: "*_spikein.bowtie2.log"
+  - fastqc:
+          name: "FastQC (raw)"
+          info: "This section of the report shows FastQC results before adapter trimming for individual libraries."
+          path_filters: "fastqc_*/*.zip"
+  - star 
   - picard:
           name: "Picard Mark Duplicates (Target Genome)"
           info: "This section of the report shows picard mark duplicate results after adapter trimming"
-  # - bowtie2:
-  #         name: "Bowtie2 Alignement (Spikein Genome)"
-  #         info: "This section of the report shows the alignment after adapter trimming for individual libraries."
-  #         path_filters: "*_spikein.bowtie2.log"
-  # - samtools
-  # - deeptools
+  - rseqc

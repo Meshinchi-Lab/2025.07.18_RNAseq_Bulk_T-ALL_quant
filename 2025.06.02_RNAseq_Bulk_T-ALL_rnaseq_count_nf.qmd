@@ -47,8 +47,50 @@ library(tidyr)
 # Background
 
 please see attached list of the samples we sequenced with the following info:
-  - [...]
 
+### Sequencing and Library Prep
+
+**Protocol and the kit**
+
+Our library prep uses random hexamers for cDNA synthesis. 
+
+we've used (our RNA input was 100 ng): 
+
+https://support.illumina.com/content/dam/illumina-support/documents/documentation/chemistry_documentation/illumina_prep/RNA/illumina-stranded-total-rna-prep-reference-guide-1000000124514-02.pdf 
+
+Trimming T-Overhang 
+https://knowledge.illumina.com/software/general/software-general-reference_material-list/000003227
+
+The trimming can be done during or after FASTQ generation.
+
+
+**Library Loaded**
+
+100ng RNA input into the library preparation  
+
+PhIX Control Library (https://emea.illumina.com/products/by-type/sequencing-kits/cluster-gen-sequencing-reagents/phix-control-v3.html): 
+
+derived from the small, well-characterized bacteriophage genome, PhiX. It is a concentrated Illumina library (10 nM in 10 µl) that has an average size of 500 bp and consists of balanced base composition at ~45% GC and ~55% AT. 
+
+We added PhIX at 1% of molarity to the pool of indexed libraries right before sequencing on NovaSeq 6000. 
+
+
+**RNA yield per million cells** 
+
+Please find attached the updated Excel file with both the number of cells per vial and the RNA yield (ng of extracted RNA per million cells) - it is very variable, and mostly depended on the viability we found when we thawed the cells. 
+
+
+**External resources**
+
+Teachey's Nature paper on T-ALL: https://www.nature.com/articles/s41586-024-07807-0 
+
+Data availability (genomic data from 1,300 T-ALL samples analyzed in Teachey's paper): 
+
+https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs002276.v3.p1 
+
+https://portal.kidsfirstdrc.org/dashboard 
+
+Part of the code is available here: https://github.com/ppolonen/genomic_basis_TALL 
 
 ### Collaborators
 

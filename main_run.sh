@@ -4,7 +4,7 @@ set -eu
 DATE=$(date +%F)
 NXF_CONFIG=./nextflow.config
 # Options: 
-NXF_PROFILE='local_docker'
+NXF_PROFILE='hyperqueue'
 # Options:  rnaseq_count, prep_genome, or sra_download
 NXF_ENTRY='rnaseq_count'
 # The output prefix on filenames for reports/logs
@@ -21,7 +21,6 @@ nextflow -c ${NXF_CONFIG} \
     -entry ${NXF_ENTRY} \
     -profile ${NXF_PROFILE} \
     -with-report reports/${PREFIX}.html \
-    -with-dag dag/${PREFIX}_dag.pdf \
-    -cache TRUE \
+    -with-dag dag/${PREFIX}_dag.html \
     -with-trace reports/${PREFIX}_trace.txt \
-    -resume
+    -cache TRUE
