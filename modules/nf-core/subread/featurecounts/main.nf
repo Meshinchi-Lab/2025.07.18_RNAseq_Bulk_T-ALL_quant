@@ -13,6 +13,8 @@ process SUBREAD_FEATURECOUNTS {
     output:
     tuple val(meta), path("*featureCounts.tsv"), emit: counts
     tuple val(meta), path("*featureCounts.tsv.summary"), emit: summary
+    tuple val(meta), path("*featureCounts.tsv.jcounts"), emit: juncs, optional: true
+    tuple val(meta), path("*featureCounts.tsv.featureCount*"), emit: report_reads, optional: true
     path "versions.yml", emit: versions
 
     when:
