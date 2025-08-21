@@ -21,6 +21,6 @@ nextflow -c ${NXF_CONFIG} \
     -entry ${NXF_ENTRY} \
     -profile ${NXF_PROFILE} \
     -with-report reports/${PREFIX}.html \
-    -with-dag ${PREFIX}_dag.dot,${PREFIX}_dag.pdf \
+    -with-dag dag/${PREFIX}_dag.html \
     -with-trace reports/${PREFIX}_trace.txt \
     -cache TRUE
