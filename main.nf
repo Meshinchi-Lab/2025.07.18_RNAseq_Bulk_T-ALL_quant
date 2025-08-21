@@ -14,9 +14,10 @@ include { RSEQC_READDISTRIBUTION } from './modules/nf-core/rseqc/readdistributio
 
 // Alignment and quantification modules
 include { TRIMGALORE } from './modules/nf-core/trimgalore/main.nf'
-include { PICARD_MARKDUPLICATES } from './modules/nf-core/picard/markduplicates/main'
+include { PICARD_MARKDUPLICATES } from './modules/nf-core/picard/markduplicates/main.nf'
 include { STAR_ALIGN } from './modules/nf-core/star/align/main.nf'
 include { SAMTOOLS_INDEX } from './modules/nf-core/samtools/index/main.nf'
+include { SUBREAD_FEATURECOUNTS } from './modules/nf-core/subread/featurecounts/main.nf'
 
 //Sample manifest (params.sample_sheet) validation step to ensure appropriate formatting. 
 //See bin/check_samplesheet.py from NF-CORE 
