@@ -2,19 +2,20 @@ report_comment: >
   For information about how to interpret these results, please see [ADD LINK HERE]
 data_format: "yaml"
 module_order:
+  - fastqc:
+        name: "FastQC (raw)"
+        info: "This section of the report shows FastQC results before adapter trimming for individual libraries."
+        anchor: "fastqc_raw"
+        path_filters_exclude: "fastqc_*.trimmed/*trimmed*.zip"
   - cutadapt:
-          name: "Cutadapt (trimmed)"
-          info: "This section of the report shows the length of trimmed reads by Cutadapt for individual libraries."
+        name: "Cutadapt (trimmed)"
+        info: "This section of the report shows the length of trimmed reads by Cutadapt for individual libraries."
   - fastqc:
-          name: "FastQC (trimmed)"
-          info: "This section of the report shows FastQC results after adapter trimming for individual libraries."
-          path_filters: "fastqc_*.trimmed/*.zip"
-  - fastqc:
-          name: "FastQC (raw)"
-          info: "This section of the report shows FastQC results before adapter trimming for individual libraries."
-          path_filters: "fastqc_*/*.zip"
-  - star 
-  - picard:
-          name: "Picard Mark Duplicates (Target Genome)"
-          info: "This section of the report shows picard mark duplicate results after adapter trimming"
-  - rseqc
+        name: "FastQC (trimmed)"
+        info: "This section of the report shows FastQC results after adapter trimming for individual libraries."
+        anchor: "fastqc_trimmed"
+        path_filters: "fastqc_*.trimmed/*trimmed*.zip"
+
+report_section_order:
+  fastqc_trimmed:
+    before: fastqc_raw
