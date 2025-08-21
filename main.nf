@@ -98,11 +98,20 @@ workflow rnaseq_count {
     //Samtools index the sorted BAM file
     SAMTOOLS_INDEX(STAR_ALIGN.out.bam)
 
+    // Mark duplicates 
+    PICARD_MARKDUPLICATES(STAR_ALIGN.out.bam, genome_refs.out.fasta, genome_refs.out.fai)
+
+    // FeatureCounts for gene quantification
+    PICARD_MARKDUPLICATES.out.bam
+        .combine(genome_refs.out.gtf)
+        .map { input -> [ input[0], input[1], input[3] ] }
+        .set { subread_ch }
+    SUBREAD_FEATURECOUNTS(subread_ch)
+
     //
     // QC 
     //
-    // Mark duplicates 
-    PICARD_MARKDUPLICATES(STAR_ALIGN.out.bam, genome_refs.out.fasta, genome_refs.out.fai)
+
     // RSEQC on the aligned reads 
     STAR_ALIGN.out.bam
         .cross(SAMTOOLS_INDEX.out.bai) { it -> it[0].id }
