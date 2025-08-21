@@ -50,27 +50,38 @@ workflow rnaseq_count {
         sra_fastqs.out.reads
             .set { fastq_ch }
     }else{
+     // define rnaseq strandness 
+     channel.value(params.strandedness)
+        .map { strand -> [ "strandedness": strand ] }
+        .set { strand_info }
+
      //Create the input channel which contains the sample id, whether its single-end, and the file paths for the fastqs. 
      Channel.fromPath(file(params.sample_sheet, checkIfExists: true))
         .splitCsv(header: true, sep: ',',  skip: 4)
-        .map { meta -> 
+        .combine(strand_info)
+        .map { sample_info -> 
+            sample_info = sample_info[0] << sample_info[1]
+            meta = [ "id":sample_info["id"], 
+                     "single_end":sample_info["single_end"].toBoolean(),
+                     "strandedness":sample_info["strandedness"]
+                    ]
             if ( meta["single_end"].toBoolean() ){
                 //single end reads have only 1 fastq file
-                [ [ "id":meta["id"], "single_end":meta["single_end"].toBoolean() ], //meta
-                  [ file(meta["r1"], checkIfExists: true) ] //reads
+                [ meta, //meta
+                  [ file(sample_info["r1"], checkIfExists: true) ] //reads
                 ]
             } else {
                 //paired end reads have 2 fastq files 
-                [ [ "id":meta["id"], "single_end":meta["single_end"].toBoolean() ], //meta
-                  [ file(meta["r1"], checkIfExists: true), file(meta["r2"], checkIfExists: true) ] //reads
+                [ meta, //meta
+                  [ file(sample_info["r1"], checkIfExists: true), 
+                    file(sample_info["r2"], checkIfExists: true) ] //reads
                 ]
             }
         }
         .set { fastq_ch }
     }
 
-    // QC on the sequenced reads
-    FASTQC(fastq_ch)
+
     if ( params.trim ) {
         //Adapter and Quality trimming of the fastq files 
         TRIMGALORE(fastq_ch)
@@ -78,11 +89,11 @@ workflow rnaseq_count {
             .set { trim_report }
         TRIMGALORE.out.reads
             .set { fastq_ch }
-        // FASTQC on the trimmed reads
-        FASTQC_TRIM(TRIMGALORE.out.reads)
     }else{
         Channel.empty()
             .set { trim_report }
+        Channel.empty()
+            .set { trim_fqc } 
     }
 
     //
@@ -111,6 +122,15 @@ workflow rnaseq_count {
     //
     // QC 
     //
+
+    // QC on the sequenced reads
+    FASTQC(fastq_ch)
+    // FASTQC on the trimmed reads
+    if ( params.trim ) {
+        FASTQC_TRIM(TRIMGALORE.out.reads)
+        FASTQC_TRIM.out.fastqc
+            .set { trim_fqc }
+    }
 
     // RSEQC on the aligned reads 
     STAR_ALIGN.out.bam
@@ -144,20 +164,14 @@ workflow rnaseq_count {
     // Collect and concatentate all the output files to be parsed by multiQC
     FASTQC.out.fastqc
         .concat(trim_report)
+        .concat(trim_fqc)
         .concat(STAR_ALIGN.out.log_final)
         .concat(STAR_ALIGN.out.read_counts)
         .concat(PICARD_MARKDUPLICATES.out.metrics)
         .concat(RSEQC_READDISTRIBUTION.out.txt)
-        .set { multiqc_concat }
-    
-    if ( params.trim ) {
-        multiqc_concat
-            .concat(FASTQC_TRIM.out.fastqc)
-    }
-    
-    multiqc_concat.map { row -> row[1]}
-                .collect()
-                .set { multiqc_ch }
+        .map { row -> row[1]}
+        .collect()
+        .set { multiqc_ch }
         
 
     //Using MultiQC for a single QC report
