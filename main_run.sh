@@ -15,7 +15,7 @@ export NXF_DEBUG=0
 
 # Ensure nextflow home variable is on a shared file system
 # https://www.nextflow.io/docs/latest/reference/env-vars.html#nextflow-settings
-export NXF_HOME="/mnt/bioinformatics/nextflow_tmp/${USER}"
+export NXF_HOME="$HOME/nextflow"
 mkdir -p $NXF_HOME
 
 # Nextflow run to execute the workflow

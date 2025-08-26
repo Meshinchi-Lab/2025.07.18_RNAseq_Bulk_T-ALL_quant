@@ -19,6 +19,7 @@ work/
 *.run
 *dag.pdf.*
 notes.txt
+*.log
 
 # Python Environments
 venv/
