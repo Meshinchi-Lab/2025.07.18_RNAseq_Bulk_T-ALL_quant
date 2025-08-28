@@ -81,6 +81,8 @@ workflow rnaseq_count {
         .set { fastq_ch }
     }
 
+    // QC on the sequenced reads
+    FASTQC(fastq_ch)
 
     if ( params.trim ) {
         //Adapter and Quality trimming of the fastq files 
@@ -88,19 +90,22 @@ workflow rnaseq_count {
         TRIMGALORE.out.log
             .set { trim_report }
         TRIMGALORE.out.reads
-            .set { fastq_ch }
+            .set { input_fqs_ch }
     }else{
         Channel.empty()
             .set { trim_report }
         Channel.empty()
-            .set { trim_fqc } 
+            .set { trim_fqc }
+        fastq_ch
+            .set { input_fqs_ch }
     }
 
     //
     // Alignment and Quantification
     //
+    
     //align reads to genome 
-    STAR_ALIGN(fastq_ch, 
+    STAR_ALIGN(input_fqs_ch, 
               genome_refs.out.index, 
               genome_refs.out.gtf,
               params.star_ignore_sjdbgtf, 
@@ -123,8 +128,7 @@ workflow rnaseq_count {
     // QC 
     //
 
-    // QC on the sequenced reads
-    FASTQC(fastq_ch)
+
     // FASTQC on the trimmed reads
     if ( params.trim ) {
         FASTQC_TRIM(TRIMGALORE.out.reads)
@@ -167,6 +171,7 @@ workflow rnaseq_count {
         .concat(trim_fqc)
         .concat(STAR_ALIGN.out.log_final)
         .concat(STAR_ALIGN.out.read_counts)
+        .concat(SUBREAD_FEATURECOUNTS.out.summary)
         .concat(PICARD_MARKDUPLICATES.out.metrics)
         .concat(RSEQC_READDISTRIBUTION.out.txt)
         .map { row -> row[1]}
