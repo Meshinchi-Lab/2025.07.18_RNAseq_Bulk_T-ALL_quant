@@ -1,20 +1,18 @@
-report_comment: >
-  For information about how to interpret these results, please see [ADD LINK HERE]
+report_header_info:
+  - Application Type: "RNA-seq"
 data_format: "yaml"
+skip_generalstats: true
 module_order:
   - fastqc:
         name: "FastQC (raw)"
         info: "This section of the report shows FastQC results before adapter trimming for individual libraries."
         anchor: "fastqc_raw"
-        path_filters_exclude: "fastqc_*.trimmed/*trimmed*.zip"
-  - cutadapt:
-        name: "Cutadapt (trimmed)"
-        info: "This section of the report shows the length of trimmed reads by Cutadapt for individual libraries."
+        path_filters_exclude: "*trimmed*"
   - fastqc:
         name: "FastQC (trimmed)"
         info: "This section of the report shows FastQC results after adapter trimming for individual libraries."
         anchor: "fastqc_trimmed"
-        path_filters: "fastqc_*.trimmed/*trimmed*.zip"
+        path_filters: "*trimmed*"
 
 report_section_order:
   fastqc_trimmed:
