@@ -2,6 +2,16 @@ report_header_info:
   - Application Type: "RNA-seq"
 data_format: "tsv"
 skip_generalstats: true
+
+extra_fn_clean_exts:
+  - type: regex_keep
+    pattern: ".+.trimmed_[12]_fastqc.zip"
+    module: fastqc_trimmed
+
+report_section_order:
+  fastqc_trimmed:
+    before: fastqc_raw
+
 module_order:
   - fastqc:
         name: "FastQC (raw)"
@@ -13,12 +23,3 @@ module_order:
         info: "This section of the report shows FastQC results after adapter trimming for individual libraries."
         anchor: "fastqc_trimmed"
         path_filters: "*trimmed*"
-
-extra_fn_clean_exts:
-  - type: regex_keep
-    pattern: ".+.trimmed_[12]_fastqc.zip"
-    module: fastqc_trimmed
-
-report_section_order:
-  fastqc_trimmed:
-    before: fastqc_raw
