@@ -166,8 +166,9 @@ workflow rnaseq_count {
     }
 
     if ( params.rerun_multiqc ){
-        outdir = "${params.outdir}/{fastqc,multiqc,picard,rseqc,samtools,star,subread,trimgalore,ucsc}/*.{out,txt,zip,tab,summary}"
+        outdir = "${params.outdir}/{fastqc,picard,rseqc,samtools,star,subread,trimgalore}/**.{out,txt,zip,tab,summary}"
         Channel.fromPath(outdir, checkIfExists: true, type: 'any')
+            .collect()
             .set { multiqc_ch }
     } else {
         // Collect and concatentate all the output files to be parsed by multiQC
