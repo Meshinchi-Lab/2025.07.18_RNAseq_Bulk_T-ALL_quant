@@ -165,19 +165,24 @@ workflow rnaseq_count {
             .set { extra_multiqc_config }
     }
 
-    // Collect and concatentate all the output files to be parsed by multiQC
-    FASTQC.out.fastqc
-        .concat(trim_report)
-        .concat(trim_fqc)
-        .concat(STAR_ALIGN.out.log_final)
-        .concat(STAR_ALIGN.out.read_counts)
-        .concat(SUBREAD_FEATURECOUNTS.out.summary)
-        .concat(PICARD_MARKDUPLICATES.out.metrics)
-        .concat(RSEQC_READDISTRIBUTION.out.txt)
-        .map { row -> row[1]}
-        .collect()
-        .set { multiqc_ch }
-        
+    if ( params.rerun_multiqc ){
+        outdir = "${params.outdir}/{fastqc,multiqc,picard,rseqc,samtools,star,subread,trimgalore,ucsc}/*.{out,txt,zip,tab,summary}"
+        Channel.fromPath(outdir, checkIfExists: true, type: 'any')
+            .set { multiqc_ch }
+    } else {
+        // Collect and concatentate all the output files to be parsed by multiQC
+        FASTQC.out.fastqc
+            .concat(trim_report)
+            .concat(trim_fqc)
+            .concat(STAR_ALIGN.out.log_final)
+            .concat(STAR_ALIGN.out.read_counts)
+            .concat(SUBREAD_FEATURECOUNTS.out.summary)
+            .concat(PICARD_MARKDUPLICATES.out.metrics)
+            .concat(RSEQC_READDISTRIBUTION.out.txt)
+            .map { row -> row[1]}
+            .collect()
+            .set { multiqc_ch }
+    }      
 
     //Using MultiQC for a single QC report
     MULTIQC(multiqc_ch, multiqc_config, extra_multiqc_config, sample_sheet.simpleName)
