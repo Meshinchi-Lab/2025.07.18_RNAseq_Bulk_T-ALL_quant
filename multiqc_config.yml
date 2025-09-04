@@ -16,7 +16,7 @@ module_order:
 
 extra_fn_clean_exts:
   - type: regex_keep
-    pattern: ".+.trimmed_[12]"
+    pattern: ".+.trimmed_[12]_fastqc.zip"
     module: fastqc_trimmed
 
 report_section_order:
