@@ -4,6 +4,7 @@
 .Rhistory
 .RData
 .Ruserdata
+.Rhistory
 
 # conda cache
 .pytest_cache/

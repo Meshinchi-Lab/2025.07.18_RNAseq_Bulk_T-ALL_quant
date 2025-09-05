@@ -165,7 +165,8 @@ workflow rnaseq_count {
             .set { extra_multiqc_config }
     }
 
-    if ( params.rerun_multiqc ){
+    def rerun = params.rerun_multiqc.toBoolean()
+    if ( rerun ){
         outdir = "${params.outdir}/{fastqc,picard,rseqc,samtools,star,subread,trimgalore}/**.{out,txt,zip,tab,summary}"
         Channel.fromPath(outdir, checkIfExists: true, type: 'any')
             .collect()
