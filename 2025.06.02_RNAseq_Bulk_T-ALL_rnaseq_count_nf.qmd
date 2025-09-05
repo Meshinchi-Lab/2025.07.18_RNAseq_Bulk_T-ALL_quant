@@ -46,8 +46,6 @@ library(tidyr)
 
 # Background
 
-please see attached list of the samples we sequenced with the following info:
-
 ### Sequencing and Library Prep
 
 **Protocol and the kit**
