@@ -84,7 +84,12 @@ workflow rnaseq_count {
     // QC on the sequenced reads
     FASTQC(fastq_ch)
 
-    if ( params.trim ) {
+    // Define paramters for processing
+    def rerun = params.rerun_multiqc.toBoolean()
+    def trim =  params.trim.toBoolean()
+    //def prep_fusions = params.star_prep_fusion.toBoolean()
+    
+    if ( trim ) {
         //Adapter and Quality trimming of the fastq files 
         TRIMGALORE(fastq_ch)
         TRIMGALORE.out.log
@@ -130,7 +135,7 @@ workflow rnaseq_count {
 
 
     // FASTQC on the trimmed reads
-    if ( params.trim ) {
+    if ( trim ) {
         FASTQC_TRIM(TRIMGALORE.out.reads)
         FASTQC_TRIM.out.fastqc
             .set { trim_fqc }
@@ -165,7 +170,6 @@ workflow rnaseq_count {
             .set { extra_multiqc_config }
     }
 
-    def rerun = params.rerun_multiqc.toBoolean()
     if ( rerun ){
         outdir = "${params.outdir}/{fastqc,picard,rseqc,samtools,star,subread,trimgalore}/**.{out,txt,zip,tab,summary}"
         Channel.fromPath(outdir, checkIfExists: true, type: 'any')

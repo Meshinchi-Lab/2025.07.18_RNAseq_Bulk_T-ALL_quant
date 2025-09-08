@@ -36,12 +36,14 @@ process STAR_ALIGN {
 
     script:
     def args = task.ext.args ?: ''
+    def fusion_args = task.ext.args2 ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     def ignore_gtf      = star_ignore_sjdbgtf ? '' : "--sjdbGTFfile $gtf"
     def seq_platform    = seq_platform ? "'PL:$seq_platform'" : ""
     def seq_center      = seq_center ? "--outSAMattrRGline ID:$prefix 'CN:$seq_center' 'SM:$prefix' $seq_platform " : "--outSAMattrRGline ID:$prefix 'SM:$prefix' $seq_platform "
     def out_sam_type    = (args.contains('--outSAMtype')) ? '' : '--outSAMtype BAM Unsorted'
     def mv_unsorted_bam = (args.contains('--outSAMtype BAM Unsorted SortedByCoordinate')) ? "mv ${prefix}.Aligned.out.bam ${prefix}.Aligned.unsort.out.bam" : ''
+    
     """
     STAR \\
         --genomeDir $index \\
@@ -51,6 +53,7 @@ process STAR_ALIGN {
         $out_sam_type \\
         $ignore_gtf \\
         $seq_center \\
+        $fusion_args \\
         $args
 
     $mv_unsorted_bam
