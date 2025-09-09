@@ -20,7 +20,7 @@ mkdir -p $NXF_HOME
 
 # Nextflow run to execute the workflow
 PREFIX="${REPORT}_${DATE}"
-nextflow -c ${NXF_CONFIG} \
+nextflow -C ${NXF_CONFIG} \
     -log reports/${PREFIX}_nextflow.log \
     run main.nf \
     -e.NXF_HOME=$NXF_HOME \
