@@ -1,6 +1,7 @@
 process PICARD_MARKDUPLICATES {
     tag "$meta.id"
     label 'process_medium'
+    label 'med_priority'
 
     conda "bioconda::picard=3.0.0"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
