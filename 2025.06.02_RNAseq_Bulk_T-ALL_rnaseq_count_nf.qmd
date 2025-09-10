@@ -1,40 +1,11 @@
 ---
 title: "T-ALL Bulk RNA-seq STAR Quantification"
 author: "Jenny L. Smith"
-jupyter: python3
-execute: 
-  enabled: true
-  cache: true
-  freeze: auto
-format:
-  html:
-    quarto-required: ">=1.6.40"
-    theme: cyborg
-    toc: true
-    toc-depth: 3
-    toc-location: left-body
-    code-fold: false
-    code-overflow: wrap
-    code-line-numbers: false
-    code-link: true
-    code-copy: true
-    anchor-sections: true
-    fontsize: 1.1em
-    linestretch: 1.5
-    smooth-scroll: true
-    email-obfuscation: javascript
+params:
+    extra_path: "~/github_repos/R/linux-ubuntu-noble/R-4.5/x86_64-pc-linux-gnu"
 ---
 
 # Set-up 
-
-```{python}
-# Core plotting libraries
-import numpy as np
-import matplotlib.pyplot as plt
-
-# Session information
-import session_info
-```
 
 ```{r}
 library(biomaRt)
@@ -104,6 +75,9 @@ Part of the code is available here: https://github.com/ppolonen/genomic_basis_TA
 
 Use the lab quarto template 
 ```{bash}
+#| eval: false
+
+
 quarto use template Meshinchi-Lab/py_analysis_template
 python3 -m venv venv 
 source venv/bin/activate 
@@ -112,6 +86,9 @@ python3 -m pip install -r requirements.txt
 
 Install nextflow and NF-Core tools CLI 
 ```{bash}
+#| eval: false
+
+
 python3 -m pip install nextflow
 python3 -m pip install nf-core
 ```
@@ -119,6 +96,9 @@ python3 -m pip install nf-core
 # Download and Prepare Reference Data
 
 ```{bash}
+#| eval: false
+
+
 # URL='https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_48/GRCh38.primary_assembly.genome.fa.gz'
 
 REFS="/genome_references/human/gencode_v48/"
@@ -191,6 +171,9 @@ dim(rRNAs_df)
 ```
 
 ```{r}
+#| eval: false
+
+
 dir.create("data/references/human/", recursive = TRUE)
 write.table(select(rRNAs, ensembl_transcript_id),
             file = "data/references/human/ensembl_transcript_id_v114.txt",
@@ -201,6 +184,8 @@ write.table(select(rRNAs, ensembl_transcript_id),
 ```
 
 ```{bash}
+#| eval: false
+
 sudo cp data/references/human/ensembl_transcript_id_v114.txt /genome_references/human/GRCh38/rRNA/ensembl_transcript_id_v114.txt
 ```
 
@@ -209,6 +194,8 @@ sudo cp data/references/human/ensembl_transcript_id_v114.txt /genome_references/
 Human data from the NF-Core github repo 
 
 ```{bash}
+#| eval: false
+
 # https://github.com/nf-core/test-datasets/tree/rnafusion/testdata/human
 
 sudo wget -v https://raw.githubusercontent.com/nf-core/test-datasets/refs/heads/rnafusion/testdata/human/README.md
@@ -223,6 +210,8 @@ sudo wget -v https://github.com/nf-core/test-datasets/raw/refs/heads/rnafusion/t
 ### Set-up environment 
 
 ```{bash}
+#| eval: false
+
 # colima
 cd ~/opt
 curl -LO https://github.com/abiosoft/colima/releases/latest/download/colima-$(uname)-$(uname -m)
@@ -251,6 +240,9 @@ sudo dpkg --log=docker-ce-cli.log --debug=10 -i docker-ce_28.3.1-1~ubuntu.22.04~
 Configure the `docker` user group
 
 ```{bash}
+#| eval: false
+
+
 #https://docs.docker.com/engine/install/linux-postinstall/
 sudo groupadd docker
 sudo usermod -aG docker $USER
@@ -259,6 +251,9 @@ docker run hello-world
 ```
 
 ```{bash}
+#| eval: false
+
+
 # activate venv
 source venv/bin/activate
 ./main_run test_pe_dataset
@@ -273,6 +268,8 @@ id -G
 # Run T-ALL Samples 
 
 ```{bash}
+#| eval: false
+
 SOURCE="$HOME/mnt/opbg/ngsonco/NGS/Francesca Benini/T-ALL/WTS run 2025.05.12/WTS_1-51-38360350"
 TARGET="$HOME/github_repos/2025.06.02_RNAseq_Bulk_T-ALL/data/fastq/WTS_run_2025.05.12"
 
@@ -374,6 +371,8 @@ write.table(fqs_concat,
 ```
 
 ```{bash}
+#| eval: false
+
 # Use the partition in /mnt with ~4tb of disk space
 OUTDIR="/mnt/bioinformatics/nextflow_out/2025.06.02_RNAseq_Bulk_T-ALL/fastq"
 # make a symlink to the data analysis directory
@@ -383,6 +382,8 @@ ln -s $OUTDIR $PROJ_DATA_DIR
 ```
 
 ```{r}
+#| eval: false
+
 PROJ_DATA_DIR <- file.path(Sys.getenv("HOME"), "github_repos/2025.06.02_RNAseq_Bulk_T-ALL/data/fastq/concatenated")
 
 # create a single shell script to concatenate Lane 1 and Lane 2 fastqs for each sample
@@ -420,6 +421,8 @@ str_count(string = cmds_list[[2]], pattern = "zcat") # 6
 ```
 
 ```{bash, eval=FALSE}
+#| eval: false
+
 # define variables
 FQS_DIR="$HOME/github_repos/2025.06.02_RNAseq_Bulk_T-ALL/data/fastq"
 SCRIPT="$FQS_DIR/concat_fqs_v1.sh"
@@ -433,14 +436,15 @@ bash $SCRIPT >> $LOG 2>&1
 ## Sample Sheet 
 
 ```{r}
+#| eval: false
+
+
 DESCRIPTION_HEADER <- c("# column r1 : the absolute or relative filepath for the read 1 fastq in paired-end RNA-seq, or the single-end fastq file.
 # column r2 : the absolute or relative filepath for the read 2 fastq in paired-end RNA-seq.
 # column id : unique sample ID, no duplicates allowed in the sample sheet.
 # column single_end : boolean [true/false] if the data is single-end or paired-end.
 id,r1,r2,single_end")
-```
 
-```{r}
 SAMPLE_SHEET <- "data/sample_sheets/2025.06.03_T-ALL_bulk_rnaseq_sample_sheet_"
 V1 <- paste0(SAMPLE_SHEET, "v1.csv")
 V2 <- paste0(SAMPLE_SHEET,"v2.csv")
@@ -479,6 +483,9 @@ for (i in 1:2) {
 ```
 
 ```{bash}
+#| eval: false
+
+
 NXF_OUTDIR="/mnt/bioinformatics/nextflow_out/2025.06.02_RNAseq_Bulk_T-ALL/rnaseq_quant"
 PROJ_OUTDIR="$HOME/github_repos/2025.06.02_RNAseq_Bulk_T-ALL/data/rnaseq_quant"
 
@@ -486,6 +493,8 @@ ln -s $NXF_OUTDIR $PROJ_OUTDIR
 ```
 
 ```{bash}
+#| eval: false
+
 tmux 
 source venv/bin/activate
 ./main_run.sh 2025.06.02_RNAseq_Bulk_T-ALL_V1
@@ -494,7 +503,129 @@ source venv/bin/activate
 
 # Computational Resources
 
+
+AWS Regions
+
+https://docs.aws.amazon.com/global-infrastructure/latest/regions/aws-regions.html
+
+```{r}
+aws_cost_estimator <- read.csv("~/github_repos/Amazon_EC2_Instances_BulkUpload_Template_Commercial.csv") %>% 
+    janitor::clean_names() %>% 
+    select(-x)
+
+head(aws_cost_estimator)
+```
+
+```{r}
+regions <- read.delim("~/github_repos/AWS_EU_Regions.txt") %>% 
+    janitor::clean_names()
+
+head(regions)
+regions
+```
+
+For 1 sample in bulk RNA-seq pipeline
+
+For each job: CPUs, RAM
+For each region:
+    - generate instance types from requirements 
+    
+then final loop:
+    - For each job: CPUs, RAM
+    - For each region:
+    - for each instance type
+
 ```{bash}
+#| eval: false
+#| 
+aws ec2 get-instance-types-from-instance-requirements \
+    --region us-east-1 \
+    --generate-cli-skeleton input > attributes.json
+```
+
+```{r}
+instance_type_attr <- jsonlite::read_json("attributes.json")
+
+instance_type_attr_df <- as.data.frame(instance_type_attr)
+```
+
+```{r}
+trace_file <- read.delim("reports/2025-06-02_RNAseq_Bulk_T-ALL_trim_subread_prepFusions_2025-09-08_trace.txt") %>% 
+    mutate(req_cpus = case_when(
+        grepl("FASTQC|INDEX", name) ~ 2,
+        grepl("TRIMGALORE|STAR|PICARD|SUBREAD", name) ~ 4,
+        TRUE ~ 1)) %>% 
+    mutate(sample_id = stringr::str_split_fixed(name, pattern = "\\s", n = 2)[,2] %>% 
+               gsub("\\(|\\)","",.)) %>% 
+    group_by(sample_id) %>% 
+    mutate(job_number = 1:dplyr::n()) %>% 
+    ungroup() %>% 
+    mutate(job_name = gsub(":", "_", gsub("^(.+)\\s.+", "\\1", name)),
+           peak_vmem_mib = fs::fs_bytes(peak_vmem) %>% 
+               R.utils::hsize(., units = "MiB", digits = 0)) %>% 
+    select(sample_id, job_name,job_number, peak_vmem_mib, 
+           name,req_cpus, everything())
+
+head(trace_file)
+trace_file
+# dim(trace_file)
+```
+
+```{r}
+resources_N1 <- trace_file %>% 
+    filter(grepl("TALL-1_S1", name)) 
+
+resources_N1
+# write.csv(resources_N1, "data/computational_resources/resources_N1.csv", row.names = FALSE)
+```
+
+```{r}
+resources_json <- purrr::map2(.x = pull(resources_N1, job_number, name = job_name),
+                              .y = resources_N1$job_name,
+                              .f = function(job,jobname) {
+    
+    print(job)
+    task <- resources_N1[job,]
+    
+    ec2_requirements <- instance_type_attr
+    ec2_requirements$ArchitectureTypes <- "x86_64"
+    ec2_requirements$VirtualizationTypes <- "hvm"
+    ec2_requirements$InstanceRequirements$VCpuCount$Min <- task[["req_cpus"]]
+    ec2_requirements$InstanceRequirements$VCpuCount$Max <- task[["req_cpus"]]
+    ec2_requirements$InstanceRequirements$MemoryMiB$Max <- task[["peak_vmem_mib"]]
+    ec2_requirements <- ec2_requirements[c("ArchitectureTypes","VirtualizationTypes","InstanceRequirements")]
+    ec2_requirements <- ec2_requirements$InstanceRequirements[""]
+    
+    # ec2_requirements <- jsonlite::toJSON(ec2_requirements)
+    
+    # jsonlite::write_json(ec2_requirements,
+                         # path = glue::glue("data/computational_resources/{jobname}_aws_ec2_instance_reqs_per_job.json"))
+    return(ec2_requirements)
+})
+
+# jsonlite::write_json(resources_json, path = "data/aws_ec2_instance_reqs_per_job.json")
+resources_json$rnaseq_count_FASTQC
+```
+
+Configure the JSON file. You must provide values for ArchitectureTypes, VirtualizationTypes, VCpuCount, and MemoryMiB.
+
+```{r}
+colnames(aws_cost_estimator)
+# instance_type_attr$VirtualizationTypes
+```
+
+```{bash}
+aws ec2 get-instance-types-from-instance-requirements \
+    --region 'eu-south-1' \
+    --cli-input-json file://data/computational_resources/rnaseq_count_SUBREAD_FEATURECOUNTS_aws_ec2_instance_reqs_per_job.json \
+    --output table
+```
+
+
+
+```{bash}
+#| eval: false
+
 cat reports/2025.06.02_RNAseq_Bulk_T-ALL_V2_2025-07-15.html | grep -E "window.data.+trace" -A 1 > reports/2025.06.02_RNAseq_Bulk_T-ALL_V2_2025-07-15.nextflow_trace.json
 ```
 
