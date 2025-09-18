@@ -5,8 +5,8 @@ import json
 import csv
 
 # define input files 
-trace_file = os.path.normpath("../data/computational_resources/resources_N1.csv")
-out_path = os.path.normpath("../data/computational_resources")
+trace_file = os.path.normpath("data/computational_resources/rnaseq_count_nf_resources_trace.csv")
+out_path = os.path.normpath("data/computational_resources")
 
 # load attributes skeleton
 # x = json.load(f)
@@ -14,26 +14,25 @@ out_path = os.path.normpath("../data/computational_resources")
 # Parse 
 with open(trace_file, encoding="utf-8") as csvfile:
     reader = csv.DictReader(csvfile)
-
+    
     # generate the minimum json attributes for the
     data = [ 
             { row["job_name"]: {
-                    "DryRun": True,
+                    "DryRun": False,
                     "ArchitectureTypes": [ "x86_64" ],
                     "VirtualizationTypes": [ "hvm" ],
                     "InstanceRequirements": {
                         "VCpuCount": {
                             "Min": int(row["req_cpus"]),
-                            "Max": int(row["req_cpus"])
                         },
                         "MemoryMiB": {
-                            "Min": 0,
-                            "Max": row["peak_vmem_mib"]
+                            "Min": int(row["peak_vmem_mib"]),
+                            "Max": int(row["peak_vmem_mib"]) + int(1024 * 4)
                         }
                     }
                 }
             }
-            for row in reader 
+            for row in reader if row['sample_id'] == 'TALL-1_S1'
     ]
 
 # Save to a new file

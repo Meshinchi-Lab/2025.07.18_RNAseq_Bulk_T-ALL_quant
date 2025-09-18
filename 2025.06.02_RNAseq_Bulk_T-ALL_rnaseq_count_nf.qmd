@@ -13,6 +13,10 @@ library(dplyr)
 library(stringr)
 library(purrr)
 library(tidyr)
+
+if (length(params$extra_path) != 0){
+    .libPaths(c(params$extra_path,.libPaths()))
+}
 ```
 
 # Background
@@ -539,14 +543,8 @@ then final loop:
 #| eval: false
 #| 
 aws ec2 get-instance-types-from-instance-requirements \
-    --region us-east-1 \
+    --region us-west-2 \
     --generate-cli-skeleton input > attributes.json
-```
-
-```{r}
-instance_type_attr <- jsonlite::read_json("attributes.json")
-
-instance_type_attr_df <- as.data.frame(instance_type_attr)
 ```
 
 ```{r}
@@ -562,66 +560,115 @@ trace_file <- read.delim("reports/2025-06-02_RNAseq_Bulk_T-ALL_trim_subread_prep
     ungroup() %>% 
     mutate(job_name = gsub(":", "_", gsub("^(.+)\\s.+", "\\1", name)),
            peak_vmem_mib = fs::fs_bytes(peak_vmem) %>% 
-               R.utils::hsize(., units = "MiB", digits = 0)) %>% 
+               R.utils::hsize(., units = "MiB", digits = 0) %>% 
+               gsub(" MiB", "", .) %>% 
+               as.numeric(.)) %>% 
+    mutate(peak_vmem_mib = case_when(
+        peak_vmem_mib < 4096 ~ 4096,
+        peak_vmem_mib > 40000 ~ 49152,
+        TRUE ~ peak_vmem_mib
+    )) %>% 
     select(sample_id, job_name,job_number, peak_vmem_mib, 
            name,req_cpus, everything())
 
 head(trace_file)
 trace_file
 # dim(trace_file)
+write.csv(trace_file, "data/computational_resources/rnaseq_count_nf_resources_trace.csv",
+          row.names = FALSE, quote = FALSE)
 ```
 
-```{r}
-resources_N1 <- trace_file %>% 
-    filter(grepl("TALL-1_S1", name)) 
-
-resources_N1
-# write.csv(resources_N1, "data/computational_resources/resources_N1.csv", row.names = FALSE)
-```
-
-```{r}
-resources_json <- purrr::map2(.x = pull(resources_N1, job_number, name = job_name),
-                              .y = resources_N1$job_name,
-                              .f = function(job,jobname) {
-    
-    print(job)
-    task <- resources_N1[job,]
-    
-    ec2_requirements <- instance_type_attr
-    ec2_requirements$ArchitectureTypes <- "x86_64"
-    ec2_requirements$VirtualizationTypes <- "hvm"
-    ec2_requirements$InstanceRequirements$VCpuCount$Min <- task[["req_cpus"]]
-    ec2_requirements$InstanceRequirements$VCpuCount$Max <- task[["req_cpus"]]
-    ec2_requirements$InstanceRequirements$MemoryMiB$Max <- task[["peak_vmem_mib"]]
-    ec2_requirements <- ec2_requirements[c("ArchitectureTypes","VirtualizationTypes","InstanceRequirements")]
-    ec2_requirements <- ec2_requirements$InstanceRequirements[""]
-    
-    # ec2_requirements <- jsonlite::toJSON(ec2_requirements)
-    
-    # jsonlite::write_json(ec2_requirements,
-                         # path = glue::glue("data/computational_resources/{jobname}_aws_ec2_instance_reqs_per_job.json"))
-    return(ec2_requirements)
-})
-
-# jsonlite::write_json(resources_json, path = "data/aws_ec2_instance_reqs_per_job.json")
-resources_json$rnaseq_count_FASTQC
-```
 
 Configure the JSON file. You must provide values for ArchitectureTypes, VirtualizationTypes, VCpuCount, and MemoryMiB.
 
-```{r}
-colnames(aws_cost_estimator)
-# instance_type_attr$VirtualizationTypes
+```{bash}
+python3 bin/create_aws_reqs_json.py
 ```
 
 ```{bash}
-aws ec2 get-instance-types-from-instance-requirements \
-    --region 'eu-south-1' \
-    --cli-input-json file://data/computational_resources/rnaseq_count_SUBREAD_FEATURECOUNTS_aws_ec2_instance_reqs_per_job.json \
-    --output table
+# Default region name [None]: eu-south-1
+# must use us-west-2 region because that is where my user exists. Probably try to create another one in 
+# aws configure
+
+for file in $(ls -1 data/computational_resources/*aws_ec2_instance_reqs.json)
+do
+    echo ${file/_reqs/_types}
+    aws ec2 get-instance-types-from-instance-requirements --cli-input-json file://${file} > ${file/_reqs/_types}
+done
+```
+
+```{r}
+ecs_instances <- dir("data/computational_resources", pattern = "*aws_ec2_instance_types.json", full.names = TRUE)
+names(ecs_instances) <- gsub("^.+resources\\/(.+)_aws.+","\\1",ecs_instances)
+
+ec2_types <- purrr::map2_dfr(.x =  ecs_instances,
+                .y = names(ecs_instances),
+                .f = function(ec2_json, job){
+                    
+                jsonlite::fromJSON(ec2_json) %>% 
+                        as.data.frame() %>% 
+                        mutate(job_name = job)
+                    
+})
+# head(trace_file, n = 1)
+head(ec2_types)
+
+# See this next for purchase options, etc
+# aws ec2 get-instance-types-from-instance-requirements
+# aws ec2 describe-instance-type-offerings
+```
+
+```{r}
+ec2_types_selected <- ec2_types %>% 
+    group_by(job_name) %>% 
+    dplyr::slice(1) %>% 
+    arrange(job_name) %>% 
+    janitor::clean_names()
+
+# Missing picard mark duplicates
+# ec2_types_selected
+```
+
+```{r}
+aws_cost_estimator
+colnames(aws_cost_estimator)
+# instance_type_attr$VirtualizationTypes
+```
+```{r}
+# bulk upload for 1 RNA-seq sample 
+aws_bulk_upload <- trace_file %>% 
+    # filter(! grepl("^ref",sample_id)) %>% 
+    filter(grepl("TALL-1_S1", sample_id)) %>% 
+    mutate(aws_region = 'eu-south-1',
+            operating_system = 'Linux',
+           tenancy = 'Shared Instances',
+           number_of_instances = 1,
+           assumed_usage = 3,
+           usage_type = 'Hours/Week',
+           purchasing_option = 'spot',
+           storage_type = '',
+           storage_amount_per_instance_gb = '',
+           provisioning_iops_per_instance_applicable_for_gp3_io1_io2 = '',
+           ebs_throughput_per_instance_applicable_for_gp3_mbps = '',
+           snapshot_frequency = '',
+           ebs_snapshot_amount_per_instance_gb_snapshot = '') %>% 
+    left_join(., ec2_types_selected, by = "job_name") %>% 
+    mutate(instance_type = ifelse(is.na(instance_type), "c1.xlarge", instance_type)) %>% 
+    select(group = sample_id, 
+           description = job_name,
+           aws_region,
+           operating_system,
+           instance_type,
+           tenancy:purchasing_option,
+           storage_type:ebs_snapshot_amount_per_instance_gb_snapshot) %>% 
+    arrange(description)
+
+aws_bulk_upload
+write.csv(aws_bulk_upload, "data/computational_resources/rnaseq_count_nf_resources_aws_bulk_upload_n1.csv", row.names = FALSE, quote = FALSE)
 ```
 
 
+## Summary
 
 ```{bash}
 #| eval: false
