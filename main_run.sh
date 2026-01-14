@@ -28,5 +28,5 @@ nextflow -C ${NXF_CONFIG} \
     -entry ${NXF_ENTRY} \
     -profile ${NXF_PROFILE} \
     -with-report reports/${PREFIX}.html \
-    -with-dag dag/${PREFIX}_dag.html \
+    -with-dag dag/${PREFIX}_dag.pdf \
     -with-trace reports/${PREFIX}_trace.txt 
