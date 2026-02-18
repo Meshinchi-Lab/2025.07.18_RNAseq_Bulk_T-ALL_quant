@@ -5,7 +5,7 @@ set -eou
 
 # inputs
 PROJECT="2025-07-18_RNAseq_Bulk_T-ALL_quant"
-DATA_DIR="$PROJECT"
+DATA_DIR="$PROJECT/data"
 
 # input files to transfer
 INPUTS="$HOME/github_repos/$DATA_DIR"
